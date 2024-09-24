@@ -6,6 +6,13 @@ use Carbon\Carbon;
 
 class EstimateService
 {
+    protected $dayService;
+    
+    public function __construct(DayService $dayService)
+    {
+        $this->dayService = $dayService;
+    }
+    
     public function calculate(array $data): array
     {
         $workdays = $data['workdays'];
@@ -19,7 +26,7 @@ class EstimateService
         $available = 0;
         $finish = $start->setDateFrom($created);
         
-        if ($created->lt($start)) {
+        if ($created->lte($start)) {
             $available = $normal;
         } elseif ($start->lt($created) && $end->gt($created)) {
             $available = $created->diffInMinutes($end);
@@ -27,7 +34,7 @@ class EstimateService
         }
         
         do {
-            if (($workdays && DayService::isWork($finish->format('Y-m-d'))) || !$workdays) {
+            if (($workdays && $this->dayService::isWork($finish->format('Y-m-d'))) || !$workdays) {
                 if ($length <= $available) {
                     $finish->addMinutes($length);
                 }
